@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xem Phim — CineVault Rạp Chiếu Phim Cá Nhân</title>
+    <meta
+      name="description"
+      content="Trình phát video trực tuyến từ Telegram Cloud thông qua Vercel Stream Proxy."
+    />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <!-- Top Bar: Strict 3-Zone Contract -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a href="/index.html" class="brand-wordmark">CINEVAULT</a>
+
+        <nav class="topbar-nav" aria-label="Điều hướng trình phát">
+          <a href="/index.html" class="topbar-link">Trang chủ</a>
+          <a href="/index.html#catalogSection" class="topbar-link">Kho phim</a>
+          <a href="#movieDetailsSection" class="topbar-link active">Chi tiết phim</a>
+          <a href="#relatedSection" class="topbar-link">Phim đề xuất</a>
+        </nav>
+
+        <button type="button" id="copyShareLinkBtn" class="topbar-cta">
+          Sao chép Link Phim
+        </button>
+      </div>
+    </header>
+
+    <main class="container player-section">
+      <div class="breadcrumb-bar">
+        <a href="/index.html" class="back-link">← Quay lại kho phim</a>
+        <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
+          <label for="playbackSpeedSelect" style="font-size: 0.84rem; color: var(--text-secondary);">
+            Tốc độ phát:
+          </label>
+          <select
+            id="playbackSpeedSelect"
+            class="form-input tabular-nums"
+            style="height: 36px; padding: 0 0.65rem; font-size: 0.84rem;"
+          >
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1.0x (Chuẩn)</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2.0x</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- HTML5 Video Player Stage -->
+      <div class="video-stage">
+        <video
+          id="cinemaVideoPlayer"
+          class="video-element"
+          controls
+          playsinline
+          preload="metadata"
+          poster="/src/assets/images/hero_saigon_protocol_1793972221847.jpg"
+        >
+          Trình duyệt của bạn không hỗ trợ thẻ video HTML5.
+        </video>
+      </div>
+
+      <!-- Movie Information & Technical Stream Metadata -->
+      <section id="movieDetailsSection" class="movie-detail-grid" aria-label="Thông tin chi tiết phim">
+        <div class="movie-info-panel">
+          <p class="hero-kicker" id="detailGenreKicker">Đang tải thông tin...</p>
+          <h1 class="movie-detail-title" id="detailTitle">Đang tải phim...</h1>
+
+          <div class="hero-meta" id="detailMetaRow" style="margin-bottom: 1.25rem;"></div>
+
+          <p
+            id="detailSynopsis"
+            style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7; margin-bottom: 1.5rem;"
+          >
+            Video được phát trực tiếp từ máy chủ lưu trữ đám mây của Telegram thông qua
+            endpoint <span class="tabular-nums">/api/stream/[id]</span> (HTTP 302 Redirect hỗ trợ
+            tua nhanh Range Requests).
+          </p>
+
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button type="button" id="reloadStreamBtn" class="btn-primary">
+              ↻ Làm mới luồng Stream
+            </button>
+            <a id="directStreamLink" href="#" target="_blank" rel="noopener" class="btn-secondary">
+              Mở luồng Stream gốc ↗
+            </a>
+          </div>
+        </div>
+
+        <aside class="movie-tech-panel" aria-label="Thông số kỹ thuật luồng phát">
+          <h2 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700;">
+            Thông số file &amp; Telegram Stream
+          </h2>
+          <div class="tech-list">
+            <div class="tech-row">
+              <span class="tech-key">UUID Phim</span>
+              <span class="tech-val tabular-nums" id="techMovieId">—</span>
+            </div>
+            <div class="tech-row">
+              <span class="tech-key">Telegram file_id</span>
+              <span class="tech-val tabular-nums" id="techFileId">—</span>
+            </div>
+            <div class="tech-row">
+              <span class="tech-key">Loại lưu trữ</span>
+              <span class="tech-val tabular-nums" id="techFileType">video</span>
+            </div>
+            <div class="tech-row">
+              <span class="tech-key">Dung lượng gốc</span>
+              <span class="tech-val tabular-nums" id="techFileSize">—</span>
+            </div>
+            <div class="tech-row">
+              <span class="tech-key">Thời lượng</span>
+              <span class="tech-val tabular-nums" id="techDuration">—</span>
+            </div>
+            <div class="tech-row">
+              <span class="tech-key">Người gửi lên Bot</span>
+              <span class="tech-val" id="techAddedBy">—</span>
+            </div>
+            <div class="tech-row">
+              <span class="tech-key">Endpoint Proxy</span>
+              <span class="tech-val tabular-nums" id="techProxyUrl">/api/stream/—</span>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <!-- Related Movies Section -->
+      <section id="relatedSection" class="catalog-section" style="padding-top: 2.75rem;">
+        <div class="catalog-header" style="margin-bottom: 1.25rem;">
+          <h2 class="section-heading">Phim đề xuất tiếp theo</h2>
+        </div>
+        <div id="relatedMoviesGrid" class="movies-grid"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <span>CineVault — Trình phát trực tuyến HTML5 Video qua Vercel Serverless Proxy</span>
+        <a href="/index.html" style="color: var(--text-secondary);">← Về trang chủ</a>
+      </div>
+    </footer>
+
+    <script>
+      const DEFAULT_SUPABASE_URL = "";
+      const DEFAULT_SUPABASE_ANON_KEY = "";
+
+      const FALLBACK_MOVIES = [
+        {
+          id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          title: "Bóng Đêm Sài Gòn: Giao Thức Cuối",
+          genre: "Hành động",
+          file_id: "BAACAgUAAxkBAAIBZ2X_saigon_protocol_1080p",
+          file_type: "video",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/hero_saigon_protocol_1793972221847.jpg",
+          duration: 8040,
+          file_size: 1524713390,
+          added_at: "2026-11-06T04:30:00.000Z",
+          added_by: "tranvanviet",
+          synopsis:
+            "Trong một đêm mưa tầm tã giữa siêu đô thị tương lai, một cựu đặc vụ an ninh mạng phát hiện đường dây truyền tải dữ liệu ngầm có khả năng kiểm soát toàn bộ lưới điện thành phố."
+        },
+        {
+          id: "9c858901-8a57-4791-81fe-4c455b099bc9",
+          title: "Nhật Thực Đỏ Trên Hành Tinh Astraeus",
+          genre: "Khoa học viễn tưởng",
+          file_id: "BAACAgUAAxkBAAIBaGX_crimson_horizon_4k",
+          file_type: "video",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/poster_crimson_horizon_1793972222936.jpg",
+          duration: 7320,
+          file_size: 1986420100,
+          added_at: "2026-11-05T19:15:00.000Z",
+          added_by: "tranvanviet",
+          synopsis:
+            "Phi hành đoàn tàu thăm dò Astraeus-7 hạ cánh khẩn cấp xuống một hành tinh núi lửa đúng vào chu kỳ nhật thực kéo dài 48 giờ, nơi tín hiệu vô tuyến cổ đại bắt đầu thức tỉnh."
+        },
+        {
+          id: "3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a",
+          title: "Chuyến Tàu Sương Mù Cao Nguyên",
+          genre: "Tâm lý",
+          file_id: "BAACAgUAAxkBAAIBaWX_dalat_fog_express",
+          file_type: "document",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/poster_dalat_fog_1793972224328.jpg",
+          duration: 6540,
+          file_size: 1180400200,
+          added_at: "2026-11-04T14:20:00.000Z",
+          added_by: "cinema_curator",
+          synopsis:
+            "Chuyến tàu hơi nước cuối cùng xuyên rừng thông lúc rạng sáng chở theo 7 hành khách xa lạ cùng một chiếc vali khoá số không người nhận."
+        },
+        {
+          id: "7a1d8b5e-2c44-4f9a-9e12-8b6f3d91a011",
+          title: "Vực Thẳm Thái Bình Dương: Triton V",
+          genre: "Tài liệu",
+          file_id: "BAACAgUAAxkBAAIBamX_pacific_abyss_doc",
+          file_type: "video",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/poster_pacific_abyss_1793972225743.jpg",
+          duration: 5880,
+          file_size: 945000000,
+          added_at: "2026-11-03T09:10:00.000Z",
+          added_by: "ocean_archive",
+          synopsis:
+            "Hành trình lặn sâu 10.900 mét của tàu ngầm Triton-V khám phá hệ sinh thái phát quang sinh học chưa từng được ghi nhận dưới đáy rãnh đại dương."
+        }
+      ];
+
+      function formatDuration(seconds) {
+        const s = Number(seconds) || 0;
+        if (s <= 0) return "Chưa rõ";
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        return h > 0 ? `${h}h ${String(m).padStart(2, "0")}m` : `${m} phút`;
+      }
+
+      function formatSize(bytes) {
+        const b = Number(bytes) || 0;
+        if (b <= 0) return "Chưa rõ";
+        const mb = b / (1024 * 1024);
+        return mb >= 1024 ? `${(mb / 1024).toFixed(2)} GB` : `${mb.toFixed(0)} MB`;
+      }
+
+      function formatDate(isoStr) {
+        if (!isoStr) return "";
+        const d = new Date(isoStr);
+        if (Number.isNaN(d.getTime())) return "";
+        return d.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        });
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      async function loadMoviePage() {
+        const params = new URLSearchParams(window.location.search);
+        const requestedId = params.get("id");
+
+        let supabaseUrl = localStorage.getItem("cinevault_supabase_url") || DEFAULT_SUPABASE_URL;
+        let supabaseKey =
+          localStorage.getItem("cinevault_supabase_anon_key") || DEFAULT_SUPABASE_ANON_KEY;
+
+        try {
+          const cfgRes = await fetch("/api/config");
+          if (cfgRes.ok) {
+            const cfg = await cfgRes.json();
+            if (!supabaseUrl && cfg.supabaseUrl) supabaseUrl = cfg.supabaseUrl;
+            if (!supabaseKey && cfg.supabaseAnonKey) supabaseKey = cfg.supabaseAnonKey;
+          }
+        } catch (e) {
+          // Bỏ qua khi chạy tĩnh
+        }
+
+        let allMovies = [];
+        if (supabaseUrl && supabaseKey) {
+          try {
+            const res = await fetch(
+              `${supabaseUrl.replace(/\/+$/, "")}/rest/v1/movies?select=*&order=added_at.desc`,
+              {
+                headers: {
+                  apikey: supabaseKey,
+                  Authorization: `Bearer ${supabaseKey}`
+                }
+              }
+            );
+            if (res.ok) {
+              allMovies = await res.json();
+            }
+          } catch (e) {
+            console.warn("Lỗi tải Supabase trên movie.html:", e);
+          }
+        }
+
+        if (!Array.isArray(allMovies) || allMovies.length === 0) {
+          let localMovies = [];
+          try {
+            localMovies = JSON.parse(localStorage.getItem("cinevault_local_movies") || "[]");
+          } catch (e) {
+            localMovies = [];
+          }
+          allMovies = [...localMovies, ...FALLBACK_MOVIES];
+        }
+
+        const currentMovie =
+          allMovies.find((m) => m.id === requestedId) || allMovies[0] || FALLBACK_MOVIES[0];
+
+        document.title = `${currentMovie.title} — CineVault`;
+        document.getElementById("detailGenreKicker").textContent =
+          currentMovie.genre || "Phim điện ảnh";
+        document.getElementById("detailTitle").textContent = currentMovie.title;
+        document.getElementById("detailMetaRow").innerHTML = `
+          <span>${escapeHtml(currentMovie.genre || "Khác")}</span>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="tabular-nums">${escapeHtml(formatDuration(currentMovie.duration))}</span>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="tabular-nums">${escapeHtml(formatSize(currentMovie.file_size))}</span>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="tabular-nums">Ngày đăng: ${escapeHtml(formatDate(currentMovie.added_at))}</span>
+        `;
+
+        if (currentMovie.synopsis) {
+          document.getElementById("detailSynopsis").textContent = currentMovie.synopsis;
+        }
+
+        const streamEndpoint = `/api/stream/${encodeURIComponent(currentMovie.id)}`;
+        document.getElementById("techMovieId").textContent = currentMovie.id;
+        document.getElementById("techFileId").textContent = currentMovie.file_id || "—";
+        document.getElementById("techFileType").textContent = currentMovie.file_type || "video";
+        document.getElementById("techFileSize").textContent = formatSize(currentMovie.file_size);
+        document.getElementById("techDuration").textContent = formatDuration(currentMovie.duration);
+        document.getElementById("techAddedBy").textContent = `@${currentMovie.added_by || "admin"}`;
+        document.getElementById("techProxyUrl").textContent = streamEndpoint;
+        document.getElementById("directStreamLink").setAttribute("href", streamEndpoint);
+
+        const videoEl = document.getElementById("cinemaVideoPlayer");
+        if (currentMovie.poster_url) {
+          videoEl.setAttribute("poster", currentMovie.poster_url);
+        } else if (currentMovie.thumbnail_file_id) {
+          videoEl.setAttribute("poster", `${streamEndpoint}?type=thumb`);
+        }
+        videoEl.src = streamEndpoint;
+
+        document.getElementById("reloadStreamBtn").addEventListener("click", () => {
+          const currentTime = videoEl.currentTime || 0;
+          videoEl.src = `${streamEndpoint}?t=${Date.now()}`;
+          videoEl.load();
+          videoEl.currentTime = currentTime;
+          videoEl.play().catch(() => {});
+        });
+
+        document.getElementById("playbackSpeedSelect").addEventListener("change", (e) => {
+          videoEl.playbackRate = Number(e.target.value) || 1;
+        });
+
+        document.getElementById("copyShareLinkBtn").addEventListener("click", async () => {
+          const shareUrl = `${window.location.origin}/movie.html?id=${encodeURIComponent(currentMovie.id)}`;
+          await navigator.clipboard.writeText(shareUrl);
+          const btn = document.getElementById("copyShareLinkBtn");
+          btn.textContent = "✓ Đã chép Link";
+          setTimeout(() => {
+            btn.textContent = "Sao chép Link Phim";
+          }, 1600);
+        });
+
+        // Render Related Movies
+        const related = allMovies.filter((m) => m.id !== currentMovie.id).slice(0, 4);
+        const relatedGrid = document.getElementById("relatedMoviesGrid");
+        relatedGrid.innerHTML = related
+          .map((m) => {
+            const pUrl =
+              m.poster_url ||
+              (m.thumbnail_file_id
+                ? `/api/stream/${encodeURIComponent(m.id)}?type=thumb`
+                : "/src/assets/images/poster_crimson_horizon_1793972222936.jpg");
+            const wUrl = `/movie.html?id=${encodeURIComponent(m.id)}`;
+            return `
+              <article class="movie-card">
+                <a href="${wUrl}" class="movie-poster-wrap">
+                  <img
+                    class="movie-poster"
+                    src="${escapeHtml(pUrl)}"
+                    alt="Poster phim ${escapeHtml(m.title)}"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                  />
+                  <div class="poster-play-overlay">
+                    <div class="play-circle">▶</div>
+                  </div>
+                </a>
+                <div class="movie-card-body">
+                  <a href="${wUrl}" class="movie-card-title">${escapeHtml(m.title)}</a>
+                  <div class="movie-card-meta">
+                    <span>${escapeHtml(m.genre || "Khác")}</span>
+                    <span class="meta-sep">·</span>
+                    <span class="tabular-nums">${escapeHtml(formatDuration(m.duration))}</span>
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      document.addEventListener("DOMContentLoaded", loadMoviePage);
+    </script>
+  </body>
+</html>

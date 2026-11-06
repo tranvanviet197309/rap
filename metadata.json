@@ -1,0 +1,6 @@
+{
+  "name": "CineVault — Rạp Chiếu Phim Cá Nhân",
+  "description": "Hệ thống rạp chiếu phim cá nhân miễn phí 100% kết hợp Telegram Bot, Supabase, và Vercel Streaming Proxy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

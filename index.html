@@ -1,0 +1,1275 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CineVault — Rạp Chiếu Phim Cá Nhân</title>
+    <meta
+      name="description"
+      content="Hệ thống rạp chiếu phim cá nhân miễn phí 100% kết hợp Telegram Bot, Supabase, và Vercel Streaming Proxy."
+    />
+    <meta property="og:title" content="CineVault — Rạp Chiếu Phim Cá Nhân" />
+    <meta
+      property="og:description"
+      content="Hệ thống rạp chiếu phim cá nhân miễn phí 100% kết hợp Telegram Bot, Supabase, và Vercel Streaming Proxy."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <!-- Top Bar: Strict 3-Zone Contract -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a href="/index.html" class="brand-wordmark">CINEVAULT</a>
+
+        <nav class="topbar-nav" aria-label="Điều hướng chính">
+          <a href="#heroSection" class="topbar-link active">Trang chủ</a>
+          <a href="#catalogSection" class="topbar-link">Kho phim</a>
+          <button type="button" id="navBotSimBtn" class="topbar-link">
+            Giả lập Bot
+          </button>
+          <button type="button" id="navCodePackBtn" class="topbar-link">
+            Bộ Code &amp; Deploy
+          </button>
+        </nav>
+
+        <button type="button" id="openSupabaseModalBtn" class="topbar-cta">
+          Kết nối Supabase
+        </button>
+      </div>
+    </header>
+
+    <main class="container">
+      <!-- Hero Section: Phim Mới Nhất -->
+      <section id="heroSection" class="hero-section" aria-label="Phim mới nhất">
+        <div id="heroContainer" class="hero-frame">
+          <div class="hero-copy">
+            <p class="hero-kicker" id="heroKicker">Phim mới cập nhật</p>
+            <h1 class="hero-title" id="heroTitle">Đang tải kho phim...</h1>
+            <div class="hero-meta" id="heroMeta"></div>
+            <p class="hero-description" id="heroDescription">
+              Hệ thống rạp chiếu phim cá nhân lưu trữ không giới hạn trên Telegram
+              Server, đồng bộ metadata qua Supabase REST API và phát trực tuyến qua
+              Vercel Proxy.
+            </p>
+            <div class="hero-actions">
+              <a id="heroWatchBtn" href="/movie.html" class="btn-primary">
+                <span>▶ Xem Phim Ngay</span>
+              </a>
+              <button type="button" id="heroAddBotBtn" class="btn-secondary">
+                <span>+ Gửi Phim Qua Bot</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="hero-media" id="heroMedia">
+            <img
+              id="heroBackdropImg"
+              src="/src/assets/images/hero_saigon_protocol_1793972221847.jpg"
+              alt="Ảnh bìa phim nổi bật"
+              referrerpolicy="no-referrer"
+            />
+            <div class="hero-scrim"></div>
+          </div>
+        </div>
+
+        <!-- Full-Width Metrics Row Below Hero Split -->
+        <div class="metrics-strip" aria-label="Thông số hệ thống">
+          <div class="metric-item">
+            <span class="metric-label">Tổng số phim trong kho</span>
+            <span class="metric-value tabular-nums" id="metricTotalMovies">0 phim</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Dung lượng Telegram Cloud</span>
+            <span class="metric-value tabular-nums" id="metricTotalSize">0.0 GB</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Chi phí vận hành</span>
+            <span class="metric-value tabular-nums">0đ / Không giới hạn</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Chế độ kết nối dữ liệu</span>
+            <span class="metric-value" id="metricDataSource">Supabase REST API</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Catalog Section: Filter Thể Loại + Search + Grid Tất Cả Phim -->
+      <section id="catalogSection" class="catalog-section" aria-label="Danh mục phim">
+        <div class="catalog-header">
+          <div class="catalog-top-row">
+            <h2 class="section-heading" id="catalogHeading">Tất cả phim</h2>
+
+            <div class="search-box">
+              <span class="search-icon" aria-hidden="true">🔍</span>
+              <input
+                type="search"
+                id="searchInput"
+                class="search-input"
+                placeholder="Tìm tên phim, thể loại, người đăng..."
+                aria-label="Tìm kiếm phim"
+              />
+              <button
+                type="button"
+                id="clearSearchBtn"
+                class="search-clear"
+                aria-label="Xoá từ khoá tìm kiếm"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Genre Filter Controls -->
+          <div class="filter-bar" id="genreFilterBar" role="tablist" aria-label="Lọc theo thể loại">
+            <button type="button" class="filter-btn active" data-genre="ALL">
+              Tất cả
+            </button>
+            <button type="button" class="filter-btn" data-genre="Hành động">
+              Hành động
+            </button>
+            <button type="button" class="filter-btn" data-genre="Khoa học viễn tưởng">
+              Khoa học viễn tưởng
+            </button>
+            <button type="button" class="filter-btn" data-genre="Kinh dị">
+              Kinh dị
+            </button>
+            <button type="button" class="filter-btn" data-genre="Tình cảm">
+              Tình cảm
+            </button>
+            <button type="button" class="filter-btn" data-genre="Hoạt hình">
+              Hoạt hình
+            </button>
+            <button type="button" class="filter-btn" data-genre="Tâm lý">
+              Tâm lý
+            </button>
+            <button type="button" class="filter-btn" data-genre="Hài hước">
+              Hài hước
+            </button>
+            <button type="button" class="filter-btn" data-genre="Tài liệu">
+              Tài liệu
+            </button>
+            <button type="button" class="filter-btn" data-genre="Khác">
+              Khác
+            </button>
+          </div>
+        </div>
+
+        <!-- Movies Grid -->
+        <div id="moviesGrid" class="movies-grid" aria-live="polite"></div>
+
+        <!-- Empty / Error State -->
+        <div id="emptyStateBox" class="state-box" style="display: none;">
+          <h3 class="state-title" id="emptyStateTitle">Không tìm thấy phim phù hợp</h3>
+          <p class="state-desc" id="emptyStateDesc">
+            Thử đổi từ khoá tìm kiếm, chọn lại thể loại "Tất cả" hoặc gửi phim mới
+            qua Telegram Bot.
+          </p>
+          <button type="button" id="resetFilterBtn" class="btn-secondary">
+            Đặt lại bộ lọc
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal 1: Giả lập Telegram Bot (Forward Video -> Tên Phim -> Inline Genre -> Lưu Supabase) -->
+    <div
+      id="botSimulatorModal"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="botModalTitle"
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 id="botModalTitle" class="modal-title">
+            Telegram Bot (@CineVaultBot) — Thêm Phim &amp; Lệnh Quản Lý
+          </h2>
+          <button
+            type="button"
+            id="closeBotModalBtn"
+            class="modal-close"
+            aria-label="Đóng cửa sổ Telegram Bot"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.9rem;">
+            Trải nghiệm đúng quy trình hoạt động của file <span class="tabular-nums">bot.py</span>:
+            Forward video ➔ Nhập tên (hoặc Skip) ➔ Chọn thể loại bằng nút Inline Keyboard ➔ Nhận link xem
+            <span class="tabular-nums">/movie.html?id={id}</span>. Hỗ trợ các lệnh
+            <span class="tabular-nums">/list</span>, <span class="tabular-nums">/search &lt;từ khoá&gt;</span>,
+            <span class="tabular-nums">/delete &lt;id&gt;</span>.
+          </p>
+
+          <div id="tgChatWindow" class="tg-chat-window" aria-live="polite"></div>
+
+          <div
+            style="
+              display: flex;
+              gap: 0.65rem;
+              flex-wrap: wrap;
+              align-items: center;
+              margin-bottom: 0.85rem;
+            "
+          >
+            <button type="button" id="simForwardVideoBtn" class="btn-primary">
+              📎 Forward Video Phim Mới
+            </button>
+            <button type="button" id="simCmdListBtn" class="btn-secondary">
+              /list
+            </button>
+            <button type="button" id="simCmdSearchBtn" class="btn-secondary">
+              /search Sài Gòn
+            </button>
+          </div>
+
+          <form id="tgChatForm" style="display: flex; gap: 0.65rem;">
+            <input
+              type="text"
+              id="tgChatInput"
+              class="form-input"
+              style="flex: 1;"
+              placeholder="Nhập tên phim, hoặc gõ /list, /search <từ khoá>, /delete <id>..."
+              aria-label="Tin nhắn gửi Bot Telegram"
+            />
+            <button type="submit" class="btn-primary">Gửi</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: Kết nối Supabase REST API -->
+    <div
+      id="supabaseModal"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="supabaseModalTitle"
+    >
+      <div class="modal-dialog" style="max-width: 580px;">
+        <div class="modal-header">
+          <h2 id="supabaseModalTitle" class="modal-title">
+            Cấu hình kết nối Supabase REST API
+          </h2>
+          <button
+            type="button"
+            id="closeSupabaseModalBtn"
+            class="modal-close"
+            aria-label="Đóng cửa sổ cấu hình Supabase"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.15rem;">
+            Trang web truy vấn trực tiếp bảng <span class="tabular-nums">movies</span> qua Supabase REST API.
+            Nếu để trống, trang web sẽ chạy ở chế độ Kho Phim Mẫu kèm LocalStorage để bạn trải nghiệm ngay.
+          </p>
+          <form id="supabaseConfigForm">
+            <div class="form-group">
+              <label class="form-label" for="inputSupabaseUrl">SUPABASE_URL</label>
+              <input
+                type="url"
+                id="inputSupabaseUrl"
+                class="form-input tabular-nums"
+                placeholder="https://xyzcompany.supabase.co"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inputSupabaseKey">
+                SUPABASE_ANON_KEY (Public Key)
+              </label>
+              <input
+                type="text"
+                id="inputSupabaseKey"
+                class="form-input tabular-nums"
+                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              />
+            </div>
+            <div
+              id="supabaseFormFeedback"
+              style="font-size: 0.84rem; margin-bottom: 1rem; display: none;"
+            ></div>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+              <button type="button" id="clearSupabaseBtn" class="btn-secondary">
+                Dùng kho phim mẫu
+              </button>
+              <button type="submit" class="btn-primary">
+                Lưu &amp; Đồng bộ ngay
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 3: Bộ 11 File Code & Hướng dẫn Deploy A-Z -->
+    <div
+      id="codeViewerModal"
+      class="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="codeModalTitle"
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h2 id="codeModalTitle" class="modal-title">
+            Trọn bộ 11 File Hệ Thống &amp; Hướng Dẫn Deploy A–Z
+          </h2>
+          <button
+            type="button"
+            id="closeCodeModalBtn"
+            class="modal-close"
+            aria-label="Đóng cửa sổ mã nguồn"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="file-tabs" id="fileTabsContainer"></div>
+          <div class="code-block-wrap">
+            <div class="code-toolbar">
+              <span id="currentFileName">1. supabase_setup.sql</span>
+              <div style="display: flex; gap: 0.5rem;">
+                <button
+                  type="button"
+                  id="copyCodeBtn"
+                  class="btn-secondary"
+                  style="padding: 0.35rem 0.75rem; min-height: 32px; font-size: 0.78rem;"
+                >
+                  Sao chép file
+                </button>
+                <button
+                  type="button"
+                  id="downloadCodeBtn"
+                  class="btn-primary"
+                  style="padding: 0.35rem 0.75rem; min-height: 32px; font-size: 0.78rem;"
+                >
+                  Tải file về
+                </button>
+              </div>
+            </div>
+            <pre class="code-pre" id="codePreContent">Đang tải nội dung file...</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <span>CineVault — Hệ thống Rạp Chiếu Phim Cá Nhân (Telegram + Supabase + Vercel)</span>
+        <span>Giao diện Vanilla HTML/CSS/JS · Streaming Proxy 302</span>
+      </div>
+    </footer>
+
+    <script>
+      /**
+       * CINEVAULT FRONTEND APPLICATION (Vanilla JS, Zero Framework)
+       * Kết nối trực tiếp Supabase REST API (/rest/v1/movies)
+       */
+      const DEFAULT_SUPABASE_URL = "";
+      const DEFAULT_SUPABASE_ANON_KEY = "";
+
+      const SEED_MOVIES = [
+        {
+          id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          title: "Bóng Đêm Sài Gòn: Giao Thức Cuối",
+          genre: "Hành động",
+          file_id: "BAACAgUAAxkBAAIBZ2X_saigon_protocol_1080p",
+          file_type: "video",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/hero_saigon_protocol_1793972221847.jpg",
+          backdrop_url: "/src/assets/images/hero_saigon_protocol_1793972221847.jpg",
+          duration: 8040,
+          file_size: 1524713390,
+          added_at: "2026-11-06T04:30:00.000Z",
+          added_by: "tranvanviet",
+          synopsis:
+            "Trong một đêm mưa tầm tã giữa siêu đô thị tương lai, một cựu đặc vụ an ninh mạng phát hiện đường dây truyền tải dữ liệu ngầm có khả năng kiểm soát toàn bộ lưới điện thành phố."
+        },
+        {
+          id: "9c858901-8a57-4791-81fe-4c455b099bc9",
+          title: "Nhật Thực Đỏ Trên Hành Tinh Astraeus",
+          genre: "Khoa học viễn tưởng",
+          file_id: "BAACAgUAAxkBAAIBaGX_crimson_horizon_4k",
+          file_type: "video",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/poster_crimson_horizon_1793972222936.jpg",
+          backdrop_url: "/src/assets/images/poster_crimson_horizon_1793972222936.jpg",
+          duration: 7320,
+          file_size: 1986420100,
+          added_at: "2026-11-05T19:15:00.000Z",
+          added_by: "tranvanviet",
+          synopsis:
+            "Phi hành đoàn tàu thăm dò Astraeus-7 hạ cánh khẩn cấp xuống một hành tinh núi lửa đúng vào chu kỳ nhật thực kéo dài 48 giờ, nơi tín hiệu vô tuyến cổ đại bắt đầu thức tỉnh."
+        },
+        {
+          id: "3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a",
+          title: "Chuyến Tàu Sương Mù Cao Nguyên",
+          genre: "Tâm lý",
+          file_id: "BAACAgUAAxkBAAIBaWX_dalat_fog_express",
+          file_type: "document",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/poster_dalat_fog_1793972224328.jpg",
+          backdrop_url: "/src/assets/images/poster_dalat_fog_1793972224328.jpg",
+          duration: 6540,
+          file_size: 1180400200,
+          added_at: "2026-11-04T14:20:00.000Z",
+          added_by: "cinema_curator",
+          synopsis:
+            "Chuyến tàu hơi nước cuối cùng xuyên rừng thông lúc rạng sáng chở theo 7 hành khách xa lạ cùng một chiếc vali khoá số không người nhận."
+        },
+        {
+          id: "7a1d8b5e-2c44-4f9a-9e12-8b6f3d91a011",
+          title: "Vực Thẳm Thái Bình Dương: Triton V",
+          genre: "Tài liệu",
+          file_id: "BAACAgUAAxkBAAIBamX_pacific_abyss_doc",
+          file_type: "video",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/poster_pacific_abyss_1793972225743.jpg",
+          backdrop_url: "/src/assets/images/poster_pacific_abyss_1793972225743.jpg",
+          duration: 5880,
+          file_size: 945000000,
+          added_at: "2026-11-03T09:10:00.000Z",
+          added_by: "ocean_archive",
+          synopsis:
+            "Hành trình lặn sâu 10.900 mét của tàu ngầm Triton-V khám phá hệ sinh thái phát quang sinh học chưa từng được ghi nhận dưới đáy rãnh đại dương."
+        },
+        {
+          id: "b290f1ee-6c54-4b01-90e6-d701748f0851",
+          title: "Ký Ức Mùa Mưa Phố Cổ",
+          genre: "Tình cảm",
+          file_id: "BAACAgUAAxkBAAIBa2X_old_quarter_rain",
+          file_type: "video",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/poster_dalat_fog_1793972224328.jpg",
+          backdrop_url: "/src/assets/images/poster_dalat_fog_1793972224328.jpg",
+          duration: 6960,
+          file_size: 1090519040,
+          added_at: "2026-11-02T16:45:00.000Z",
+          added_by: "tranvanviet",
+          synopsis:
+            "Hai người làm nghề phục chế phim nhựa tình cờ tìm thấy cuộn phim 16mm quay dở từ ba thập kỷ trước tại một rạp chiếu bóng cũ."
+        },
+        {
+          id: "d41d8cd9-8f00-4204-a980-0998ecf8427e",
+          title: "Trạm Không Gian Bóng Ma",
+          genre: "Kinh dị",
+          file_id: "BAACAgUAAxkBAAIBbGX_orbit_ghost_station",
+          file_type: "video",
+          thumbnail_file_id: null,
+          poster_url: "/src/assets/images/poster_crimson_horizon_1793972222936.jpg",
+          backdrop_url: "/src/assets/images/poster_crimson_horizon_1793972222936.jpg",
+          duration: 6180,
+          file_size: 1342177280,
+          added_at: "2026-11-01T21:00:00.000Z",
+          added_by: "cinema_curator",
+          synopsis:
+            "Đội cứu hộ tiếp cận trạm nghiên cứu quỹ đạo thấp sau 14 ngày mất liên lạc và nhận ra hệ thống AI trên trạm vẫn đang ghi hình mọi chuyển động."
+        }
+      ];
+
+      const state = {
+        movies: [],
+        selectedGenre: "ALL",
+        searchQuery: "",
+        supabaseUrl: localStorage.getItem("cinevault_supabase_url") || DEFAULT_SUPABASE_URL,
+        supabaseKey: localStorage.getItem("cinevault_supabase_anon_key") || DEFAULT_SUPABASE_ANON_KEY,
+        usingLiveSupabase: false,
+        botStep: "IDLE", // IDLE | ASK_TITLE | ASK_GENRE | ASK_THUMB
+        pendingBotMovie: null,
+        projectFiles: []
+      };
+
+      function formatDuration(seconds) {
+        const s = Number(seconds) || 0;
+        if (s <= 0) return "Chưa rõ thời lượng";
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        return h > 0 ? `${h}h ${String(m).padStart(2, "0")}m` : `${m} phút`;
+      }
+
+      function formatSize(bytes) {
+        const b = Number(bytes) || 0;
+        if (b <= 0) return "Chưa rõ dung lượng";
+        const mb = b / (1024 * 1024);
+        if (mb >= 1024) return `${(mb / 1024).toFixed(2)} GB`;
+        return `${mb.toFixed(0)} MB`;
+      }
+
+      function formatDate(isoStr) {
+        if (!isoStr) return "";
+        const d = new Date(isoStr);
+        if (Number.isNaN(d.getTime())) return "";
+        return d.toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        });
+      }
+
+      function getLocalAddedMovies() {
+        try {
+          const raw = localStorage.getItem("cinevault_local_movies");
+          return raw ? JSON.parse(raw) : [];
+        } catch (err) {
+          return [];
+        }
+      }
+
+      function saveLocalAddedMovies(list) {
+        localStorage.setItem("cinevault_local_movies", JSON.stringify(list));
+      }
+
+      function getDeletedMovieIds() {
+        try {
+          const raw = localStorage.getItem("cinevault_deleted_ids");
+          return raw ? JSON.parse(raw) : [];
+        } catch (err) {
+          return [];
+        }
+      }
+
+      function markMovieDeletedLocally(id) {
+        const deleted = getDeletedMovieIds();
+        if (!deleted.includes(id)) {
+          deleted.push(id);
+          localStorage.setItem("cinevault_deleted_ids", JSON.stringify(deleted));
+        }
+        const localMovies = getLocalAddedMovies().filter((m) => m.id !== id);
+        saveLocalAddedMovies(localMovies);
+      }
+
+      async function loadRuntimeEnv() {
+        try {
+          const res = await fetch("/api/config");
+          if (res.ok) {
+            const cfg = await res.json();
+            if (!state.supabaseUrl && cfg.supabaseUrl) {
+              state.supabaseUrl = cfg.supabaseUrl;
+            }
+            if (!state.supabaseKey && cfg.supabaseAnonKey) {
+              state.supabaseKey = cfg.supabaseAnonKey;
+            }
+          }
+        } catch (e) {
+          // Chạy tĩnh trên Vercel không cần /api/config
+        }
+      }
+
+      async function fetchMovies() {
+        const url = (state.supabaseUrl || "").trim().replace(/\/+$/, "");
+        const key = (state.supabaseKey || "").trim();
+
+        if (url && key) {
+          try {
+            const response = await fetch(
+              `${url}/rest/v1/movies?select=*&order=added_at.desc`,
+              {
+                headers: {
+                  apikey: key,
+                  Authorization: `Bearer ${key}`,
+                  Accept: "application/json"
+                }
+              }
+            );
+            if (response.ok) {
+              const data = await response.json();
+              state.usingLiveSupabase = true;
+              state.movies = Array.isArray(data) ? data : [];
+              renderAll();
+              return;
+            }
+          } catch (err) {
+            console.warn("Không thể kết nối Supabase, chuyển sang kho phim cục bộ:", err);
+          }
+        }
+
+        state.usingLiveSupabase = false;
+        const deletedIds = getDeletedMovieIds();
+        const localCustom = getLocalAddedMovies();
+        const combined = [...localCustom, ...SEED_MOVIES].filter(
+          (m) => !deletedIds.includes(m.id)
+        );
+        combined.sort((a, b) => new Date(b.added_at) - new Date(a.added_at));
+        state.movies = combined;
+        renderAll();
+      }
+
+      function resolvePosterUrl(movie) {
+        if (movie.poster_url) return movie.poster_url;
+        if (movie.thumbnail_file_id) {
+          return `/api/stream/${encodeURIComponent(movie.id)}?type=thumb`;
+        }
+        return "/src/assets/images/poster_crimson_horizon_1793972222936.jpg";
+      }
+
+      function renderHero() {
+        const latest = state.movies[0];
+        const titleEl = document.getElementById("heroTitle");
+        const metaEl = document.getElementById("heroMeta");
+        const descEl = document.getElementById("heroDescription");
+        const watchBtn = document.getElementById("heroWatchBtn");
+        const backdropImg = document.getElementById("heroBackdropImg");
+
+        if (!latest) {
+          titleEl.textContent = "Kho phim hiện đang trống";
+          metaEl.innerHTML = "<span>Chưa có phim nào</span>";
+          descEl.textContent =
+            "Hãy gửi hoặc forward một video vào Telegram Bot để bộ phim đầu tiên xuất hiện tại đây.";
+          watchBtn.setAttribute("href", "#catalogSection");
+          return;
+        }
+
+        titleEl.textContent = latest.title;
+        metaEl.innerHTML = `
+          <span>${escapeHtml(latest.genre || "Khác")}</span>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="tabular-nums">${escapeHtml(formatDuration(latest.duration))}</span>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="tabular-nums">${escapeHtml(formatSize(latest.file_size))}</span>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="tabular-nums">${escapeHtml(formatDate(latest.added_at))}</span>
+        `;
+        descEl.textContent =
+          latest.synopsis ||
+          `Phim được tải lên bởi @${latest.added_by || "user"} qua Telegram Cloud (${latest.file_type || "video"}). Phát trực tiếp thông qua giao thức HTTP 302 Stream Proxy.`;
+        watchBtn.setAttribute("href", `/movie.html?id=${encodeURIComponent(latest.id)}`);
+
+        const heroSrc = latest.backdrop_url || resolvePosterUrl(latest);
+        backdropImg.src = heroSrc;
+        backdropImg.alt = `Ảnh nền phim ${latest.title}`;
+      }
+
+      function renderMetrics() {
+        const totalCount = state.movies.length;
+        const totalBytes = state.movies.reduce(
+          (acc, item) => acc + (Number(item.file_size) || 0),
+          0
+        );
+        document.getElementById("metricTotalMovies").textContent = `${totalCount} phim`;
+        document.getElementById("metricTotalSize").textContent = formatSize(totalBytes);
+        document.getElementById("metricDataSource").textContent = state.usingLiveSupabase
+          ? "Supabase Trực Tiếp"
+          : "Supabase Ready (Local Demo)";
+      }
+
+      function getFilteredMovies() {
+        return state.movies.filter((movie) => {
+          const matchGenre =
+            state.selectedGenre === "ALL" ||
+            (movie.genre || "").toLowerCase() === state.selectedGenre.toLowerCase();
+          const q = state.searchQuery.trim().toLowerCase();
+          if (!q) return matchGenre;
+          const inTitle = (movie.title || "").toLowerCase().includes(q);
+          const inGenre = (movie.genre || "").toLowerCase().includes(q);
+          const inAuthor = (movie.added_by || "").toLowerCase().includes(q);
+          return matchGenre && (inTitle || inGenre || inAuthor);
+        });
+      }
+
+      function renderGrid() {
+        const gridEl = document.getElementById("moviesGrid");
+        const emptyBox = document.getElementById("emptyStateBox");
+        const headingEl = document.getElementById("catalogHeading");
+        const filtered = getFilteredMovies();
+
+        headingEl.textContent =
+          state.selectedGenre === "ALL"
+            ? `Tất cả phim (${filtered.length})`
+            : `${state.selectedGenre} (${filtered.length})`;
+
+        if (filtered.length === 0) {
+          gridEl.innerHTML = "";
+          emptyBox.style.display = "block";
+          return;
+        }
+
+        emptyBox.style.display = "none";
+        gridEl.innerHTML = filtered
+          .map((movie) => {
+            const posterSrc = resolvePosterUrl(movie);
+            const watchUrl = `/movie.html?id=${encodeURIComponent(movie.id)}`;
+            return `
+              <article class="movie-card">
+                <a href="${watchUrl}" class="movie-poster-wrap" aria-label="Xem phim ${escapeHtml(movie.title)}">
+                  <div class="poster-fallback">
+                    <span style="font-size: 2rem;">🎬</span>
+                    <span class="poster-fallback-title">${escapeHtml(movie.title)}</span>
+                  </div>
+                  <img
+                    class="movie-poster"
+                    src="${escapeHtml(posterSrc)}"
+                    alt="Poster phim ${escapeHtml(movie.title)}"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    onerror="this.style.display='none'"
+                  />
+                  <div class="poster-play-overlay">
+                    <div class="play-circle" aria-hidden="true">▶</div>
+                  </div>
+                </a>
+                <div class="movie-card-body">
+                  <a href="${watchUrl}" class="movie-card-title" title="${escapeHtml(movie.title)}">
+                    ${escapeHtml(movie.title)}
+                  </a>
+                  <div class="movie-card-meta">
+                    <span>${escapeHtml(movie.genre || "Khác")}</span>
+                    <span class="meta-sep" aria-hidden="true">·</span>
+                    <span class="tabular-nums">${escapeHtml(formatDuration(movie.duration))}</span>
+                    <span class="meta-sep" aria-hidden="true">·</span>
+                    <span class="tabular-nums">${escapeHtml(formatSize(movie.file_size))}</span>
+                  </div>
+                  <div class="movie-card-footer">
+                    <span class="tabular-nums">${escapeHtml(formatDate(movie.added_at))}</span>
+                    <a href="${watchUrl}" class="card-watch-link">Xem phim →</a>
+                  </div>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      function renderAll() {
+        renderHero();
+        renderMetrics();
+        renderGrid();
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      // =========================================================================
+      // INTERACTIVE TELEGRAM BOT SIMULATOR (MÔ PHỎNG CHÍNH XÁC BOT.PY)
+      // =========================================================================
+      const BOT_GENRES = [
+        "Hành động",
+        "Khoa học viễn tưởng",
+        "Kinh dị",
+        "Tình cảm",
+        "Hoạt hình",
+        "Tâm lý",
+        "Hài hước",
+        "Tài liệu",
+        "Khác"
+      ];
+
+      function appendBotMessage(htmlContent) {
+        const win = document.getElementById("tgChatWindow");
+        const bubble = document.createElement("div");
+        bubble.className = "tg-bubble bot";
+        bubble.innerHTML = htmlContent;
+        win.appendChild(bubble);
+        win.scrollTop = win.scrollHeight;
+      }
+
+      function appendUserMessage(text) {
+        const win = document.getElementById("tgChatWindow");
+        const bubble = document.createElement("div");
+        bubble.className = "tg-bubble user";
+        bubble.textContent = text;
+        win.appendChild(bubble);
+        win.scrollTop = win.scrollHeight;
+      }
+
+      function initBotGreeting() {
+        const win = document.getElementById("tgChatWindow");
+        if (win.children.length > 0) return;
+        appendBotMessage(`
+          <strong>🎬 Xin chào! Chào mừng đến với @CineVaultBot.</strong><br/>
+          Hãy bấm nút <strong>"📎 Forward Video Phim Mới"</strong> bên dưới để thử quy trình thêm phim, hoặc gõ lệnh:<br/>
+          • <span class="tabular-nums">/list</span> — Xem danh sách phim<br/>
+          • <span class="tabular-nums">/search &lt;từ khoá&gt;</span> — Tìm kiếm phim<br/>
+          • <span class="tabular-nums">/delete &lt;id&gt;</span> — Xoá phim theo ID
+        `);
+      }
+
+      function startSimulatedVideoUpload() {
+        const sampleFiles = [
+          { name: "Dune.Part.Two.2024.1080p.BluRay.mp4", duration: 9960, size: 2147483648 },
+          { name: "Lat.Mat.7.Mot.Dieu.Uoc.2024.1080p.mkv", duration: 8280, size: 1680000000 },
+          { name: "Interstellar.IMAX.Remastered.mp4", duration: 10140, size: 2450000000 },
+          { name: "Mai.2024.WebDL.1080p.mp4", duration: 7860, size: 1490000000 }
+        ];
+        const pick = sampleFiles[Math.floor(Math.random() * sampleFiles.length)];
+        const cleanDefaultTitle = pick.name.replace(/\.(mp4|mkv|webm|mov)$/i, "").replace(/\./g, " ");
+
+        appendUserMessage(`[Forwarded Video] 📹 ${pick.name} (${formatSize(pick.size)})`);
+
+        state.pendingBotMovie = {
+          file_id: `BAACAgUAAxkBAAIC_${Date.now()}`,
+          file_type: pick.name.endsWith(".mkv") ? "document" : "video",
+          default_title: cleanDefaultTitle,
+          title: cleanDefaultTitle,
+          duration: pick.duration,
+          file_size: pick.size,
+          added_by: "telegram_user"
+        };
+        state.botStep = "ASK_TITLE";
+
+        appendBotMessage(`
+          ✅ <strong>Đã nhận file phim!</strong><br/>
+          📄 Tên mặc định: <span class="tabular-nums">${escapeHtml(cleanDefaultTitle)}</span><br/>
+          📦 Dung lượng: <span class="tabular-nums">${formatSize(pick.size)}</span><br/><br/>
+          👉 Hãy nhập <strong>Tên phim</strong> vào ô chat bên dưới, hoặc bấm nút để giữ tên mặc định:
+          <div style="margin-top: 0.6rem;">
+            <button type="button" class="tg-inline-btn" data-bot-action="skip_title">
+              ⏭ Giữ tên mặc định
+            </button>
+          </div>
+        `);
+      }
+
+      function promptBotGenre(chosenTitle) {
+        if (!state.pendingBotMovie) return;
+        state.pendingBotMovie.title = chosenTitle;
+        state.botStep = "ASK_GENRE";
+
+        const genreBtns = BOT_GENRES.map(
+          (g) =>
+            `<button type="button" class="tg-inline-btn" data-bot-genre="${escapeHtml(g)}">${escapeHtml(g)}</button>`
+        ).join("");
+
+        appendBotMessage(`
+          🏷 Tên phim: <strong>${escapeHtml(chosenTitle)}</strong><br/><br/>
+          👉 Hãy chọn <strong>Thể loại phim</strong> bằng Inline Keyboard bên dưới:
+          <div class="tg-inline-grid">${genreBtns}</div>
+        `);
+      }
+
+      function promptBotThumbnail(chosenGenre) {
+        if (!state.pendingBotMovie) return;
+        state.pendingBotMovie.genre = chosenGenre;
+        state.botStep = "ASK_THUMB";
+
+        appendBotMessage(`
+          🎭 Thể loại: <strong>${escapeHtml(chosenGenre)}</strong><br/><br/>
+          🖼 Bạn có muốn gửi kèm <strong>Ảnh bìa (Thumbnail)</strong> cho phim không?
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.65rem;">
+            <button type="button" class="tg-inline-btn" data-bot-thumb="send_photo">
+              🖼 Gửi ảnh Poster kèm theo
+            </button>
+            <button type="button" class="tg-inline-btn" data-bot-thumb="skip_thumb">
+              ⏭ Bỏ qua ảnh bìa (Lưu ngay)
+            </button>
+          </div>
+        `);
+      }
+
+      async function finalizeBotMovieSave(withCustomThumb = false) {
+        if (!state.pendingBotMovie) return;
+        const chosenGenre = state.pendingBotMovie.genre || "Khác";
+        state.botStep = "IDLE";
+
+        const customThumbPosters = [
+          "/src/assets/images/poster_crimson_horizon_1793972222936.jpg",
+          "/src/assets/images/poster_dalat_fog_1793972224328.jpg",
+          "/src/assets/images/poster_pacific_abyss_1793972225743.jpg"
+        ];
+        const chosenPoster = withCustomThumb
+          ? customThumbPosters[Math.floor(Math.random() * customThumbPosters.length)]
+          : "/src/assets/images/hero_saigon_protocol_1793972221847.jpg";
+
+        const newMovie = {
+          id: crypto.randomUUID
+            ? crypto.randomUUID()
+            : `abcd1234-${Date.now()}-4000-8000-1234567890ab`,
+          title: state.pendingBotMovie.title,
+          genre: chosenGenre,
+          file_id: state.pendingBotMovie.file_id,
+          file_type: state.pendingBotMovie.file_type,
+          thumbnail_file_id: withCustomThumb ? `AgACAgUAAxkBAAI_thumb_${Date.now()}` : null,
+          poster_url: chosenPoster,
+          backdrop_url: chosenPoster,
+          duration: state.pendingBotMovie.duration,
+          file_size: state.pendingBotMovie.file_size,
+          added_at: new Date().toISOString(),
+          added_by: state.pendingBotMovie.added_by
+        };
+
+        // Nếu người dùng đã cấu hình Supabase thực tế thì POST thẳng lên Supabase
+        if (state.supabaseUrl && state.supabaseKey) {
+          try {
+            const resp = await fetch(`${state.supabaseUrl.replace(/\/+$/, "")}/rest/v1/movies`, {
+              method: "POST",
+              headers: {
+                apikey: state.supabaseKey,
+                Authorization: `Bearer ${state.supabaseKey}`,
+                "Content-Type": "application/json",
+                Prefer: "return=representation"
+              },
+              body: JSON.stringify({
+                title: newMovie.title,
+                genre: newMovie.genre,
+                file_id: newMovie.file_id,
+                file_type: newMovie.file_type,
+                thumbnail_file_id: null,
+                duration: newMovie.duration,
+                file_size: newMovie.file_size,
+                added_at: newMovie.added_at,
+                added_by: newMovie.added_by
+              })
+            });
+            if (resp.ok) {
+              const rows = await resp.json();
+              if (Array.isArray(rows) && rows[0]?.id) {
+                newMovie.id = rows[0].id;
+              }
+            }
+          } catch (e) {
+            console.warn("Lưu Supabase lỗi, dùng LocalStorage:", e);
+          }
+        }
+
+        const localList = getLocalAddedMovies();
+        localList.unshift(newMovie);
+        saveLocalAddedMovies(localList);
+        state.pendingBotMovie = null;
+
+        await fetchMovies();
+
+        const watchLink = `/movie.html?id=${encodeURIComponent(newMovie.id)}`;
+        appendBotMessage(`
+          🎉 <strong>ĐÃ LƯU PHIM THÀNH CÔNG!</strong><br/><br/>
+          🎬 Tên phim: <strong>${escapeHtml(newMovie.title)}</strong><br/>
+          🎭 Thể loại: ${escapeHtml(newMovie.genre)}<br/>
+          ⏱ Thời lượng: <span class="tabular-nums">${formatDuration(newMovie.duration)}</span><br/>
+          🆔 ID: <span class="tabular-nums">${escapeHtml(newMovie.id)}</span><br/><br/>
+          🍿 Link xem trực tiếp:<br/>
+          <a href="${watchLink}" style="color: #64b5ef; text-decoration: underline;" class="tabular-nums">
+            ${window.location.origin}${watchLink}
+          </a>
+        `);
+      }
+
+      async function handleBotTextCommand(rawText) {
+        const text = rawText.trim();
+        if (!text) return;
+        appendUserMessage(text);
+
+        if (text === "/cancel") {
+          state.botStep = "IDLE";
+          state.pendingBotMovie = null;
+          appendBotMessage("🛑 Đã huỷ thao tác thêm phim hiện tại.");
+          return;
+        }
+
+        if (state.botStep === "ASK_TITLE" && !text.startsWith("/")) {
+          promptBotGenre(text);
+          return;
+        }
+
+        if (text === "/list") {
+          const top = state.movies.slice(0, 10);
+          if (top.length === 0) {
+            appendBotMessage("📭 Kho phim hiện đang trống.");
+            return;
+          }
+          const items = top
+            .map(
+              (m, i) =>
+                `${i + 1}. <strong>${escapeHtml(m.title)}</strong> (${escapeHtml(m.genre)}) — <a href="/movie.html?id=${encodeURIComponent(m.id)}" style="color:#64b5ef;">Xem ngay</a><br/><span class="tabular-nums" style="font-size:0.75rem;color:#9ca3af;">ID: ${escapeHtml(m.id)}</span>`
+            )
+            .join("<br/><br/>");
+          appendBotMessage(`🍿 <strong>DANH SÁCH PHIM MỚI NHẤT:</strong><br/><br/>${items}`);
+          return;
+        }
+
+        if (text.startsWith("/search")) {
+          const kw = text.replace("/search", "").trim().toLowerCase();
+          if (!kw) {
+            appendBotMessage("🔍 Cú pháp: <span class='tabular-nums'>/search &lt;từ khoá&gt;</span>");
+            return;
+          }
+          const matched = state.movies.filter((m) =>
+            (m.title || "").toLowerCase().includes(kw)
+          );
+          if (matched.length === 0) {
+            appendBotMessage(`🔍 Không tìm thấy phim nào khớp với từ khoá: <strong>${escapeHtml(kw)}</strong>`);
+            return;
+          }
+          const listHtml = matched
+            .map(
+              (m, i) =>
+                `${i + 1}. <strong>${escapeHtml(m.title)}</strong> [${escapeHtml(m.genre)}] — <a href="/movie.html?id=${encodeURIComponent(m.id)}" style="color:#64b5ef;">Mở trình phát</a>`
+            )
+            .join("<br/>");
+          appendBotMessage(`🔎 <strong>KẾT QUẢ TÌM KIẾM:</strong><br/>${listHtml}`);
+          return;
+        }
+
+        if (text.startsWith("/delete")) {
+          const targetId = text.replace("/delete", "").trim();
+          if (!targetId) {
+            appendBotMessage("🗑 Cú pháp: <span class='tabular-nums'>/delete &lt;id_phim&gt;</span>");
+            return;
+          }
+          const found = state.movies.find((m) => m.id === targetId);
+          if (!found) {
+            appendBotMessage(`⚠️ Không tìm thấy phim có ID: <span class="tabular-nums">${escapeHtml(targetId)}</span>`);
+            return;
+          }
+          markMovieDeletedLocally(targetId);
+          await fetchMovies();
+          appendBotMessage(
+            `🗑 Đã xoá phim <strong>${escapeHtml(found.title)}</strong> khỏi rạp chiếu phim!`
+          );
+          return;
+        }
+
+        appendBotMessage(
+          "💡 Bấm nút <strong>📎 Forward Video Phim Mới</strong> để tải phim lên, hoặc dùng các lệnh <span class='tabular-nums'>/list</span>, <span class='tabular-nums'>/search &lt;từ khoá&gt;</span>, <span class='tabular-nums'>/delete &lt;id&gt;</span>."
+        );
+      }
+
+      // =========================================================================
+      // 11-FILE CODE VIEWER & DOWNLOADER
+      // =========================================================================
+      let activeFileIndex = 0;
+
+      async function loadProjectFilesModal() {
+        const tabsEl = document.getElementById("fileTabsContainer");
+        const preEl = document.getElementById("codePreContent");
+
+        if (state.projectFiles.length === 0) {
+          try {
+            const res = await fetch("/api/project-files");
+            if (res.ok) {
+              const data = await res.json();
+              state.projectFiles = data.files || [];
+            }
+          } catch (e) {
+            console.warn("Không thể tải /api/project-files:", e);
+          }
+        }
+
+        if (state.projectFiles.length === 0) {
+          preEl.textContent =
+            "Tất cả 11 file đã được tạo sẵn trong thư mục gốc của dự án (supabase_setup.sql, bot.py, requirements.txt, render.yaml, api/stream/[id].js, vercel.json, index.html, movie.html, style.css, .env.example, README.md).";
+          return;
+        }
+
+        tabsEl.innerHTML = state.projectFiles
+          .map(
+            (file, idx) => `
+              <button
+                type="button"
+                class="file-tab-btn ${idx === activeFileIndex ? "active" : ""}"
+                data-file-idx="${idx}"
+              >
+                ${idx + 1}. ${escapeHtml(file.path)}
+              </button>
+            `
+          )
+          .join("");
+
+        renderSelectedCodeFile();
+      }
+
+      function renderSelectedCodeFile() {
+        const file = state.projectFiles[activeFileIndex];
+        if (!file) return;
+        document.getElementById("currentFileName").textContent = `${activeFileIndex + 1}. ${file.path}`;
+        document.getElementById("codePreContent").textContent = file.content;
+      }
+
+      // =========================================================================
+      // EVENT LISTENERS
+      // =========================================================================
+      document.addEventListener("DOMContentLoaded", async () => {
+        await loadRuntimeEnv();
+        await fetchMovies();
+
+        // Genre Filter Buttons
+        document.getElementById("genreFilterBar").addEventListener("click", (e) => {
+          const btn = e.target.closest(".filter-btn");
+          if (!btn) return;
+          document
+            .querySelectorAll("#genreFilterBar .filter-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          state.selectedGenre = btn.getAttribute("data-genre") || "ALL";
+          renderGrid();
+        });
+
+        // Search Input
+        const searchInput = document.getElementById("searchInput");
+        const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+        searchInput.addEventListener("input", () => {
+          state.searchQuery = searchInput.value;
+          clearSearchBtn.classList.toggle("visible", state.searchQuery.length > 0);
+          renderGrid();
+        });
+
+        clearSearchBtn.addEventListener("click", () => {
+          searchInput.value = "";
+          state.searchQuery = "";
+          clearSearchBtn.classList.remove("visible");
+          renderGrid();
+        });
+
+        document.getElementById("resetFilterBtn").addEventListener("click", () => {
+          searchInput.value = "";
+          state.searchQuery = "";
+          state.selectedGenre = "ALL";
+          clearSearchBtn.classList.remove("visible");
+          document
+            .querySelectorAll("#genreFilterBar .filter-btn")
+            .forEach((b, i) => b.classList.toggle("active", i === 0));
+          renderGrid();
+        });
+
+        // Bot Simulator Modal
+        const botModal = document.getElementById("botSimulatorModal");
+        const openBotModal = () => {
+          botModal.classList.add("open");
+          initBotGreeting();
+        };
+        document.getElementById("navBotSimBtn").addEventListener("click", openBotModal);
+        document.getElementById("heroAddBotBtn").addEventListener("click", openBotModal);
+        document.getElementById("closeBotModalBtn").addEventListener("click", () => {
+          botModal.classList.remove("open");
+        });
+
+        document.getElementById("simForwardVideoBtn").addEventListener("click", () => {
+          startSimulatedVideoUpload();
+        });
+        document.getElementById("simCmdListBtn").addEventListener("click", () => {
+          handleBotTextCommand("/list");
+        });
+        document.getElementById("simCmdSearchBtn").addEventListener("click", () => {
+          handleBotTextCommand("/search Sài Gòn");
+        });
+
+        document.getElementById("tgChatForm").addEventListener("submit", (e) => {
+          e.preventDefault();
+          const input = document.getElementById("tgChatInput");
+          const val = input.value;
+          input.value = "";
+          handleBotTextCommand(val);
+        });
+
+        document.getElementById("tgChatWindow").addEventListener("click", (e) => {
+          const skipBtn = e.target.closest("[data-bot-action='skip_title']");
+          if (skipBtn && state.pendingBotMovie) {
+            appendUserMessage("⏭ Giữ tên mặc định");
+            promptBotGenre(state.pendingBotMovie.default_title);
+            return;
+          }
+          const genreBtn = e.target.closest("[data-bot-genre]");
+          if (genreBtn && state.pendingBotMovie) {
+            const g = genreBtn.getAttribute("data-bot-genre");
+            appendUserMessage(`Thể loại: ${g}`);
+            promptBotThumbnail(g);
+            return;
+          }
+          const thumbBtn = e.target.closest("[data-bot-thumb]");
+          if (thumbBtn && state.pendingBotMovie) {
+            const mode = thumbBtn.getAttribute("data-bot-thumb");
+            if (mode === "send_photo") {
+              appendUserMessage("[Photo] 🖼 Đã gửi ảnh bìa Poster HD");
+              finalizeBotMovieSave(true);
+            } else {
+              appendUserMessage("⏭ Bỏ qua ảnh bìa (Lưu ngay)");
+              finalizeBotMovieSave(false);
+            }
+          }
+        });
+
+        // Supabase Config Modal
+        const sbModal = document.getElementById("supabaseModal");
+        document.getElementById("openSupabaseModalBtn").addEventListener("click", () => {
+          document.getElementById("inputSupabaseUrl").value = state.supabaseUrl;
+          document.getElementById("inputSupabaseKey").value = state.supabaseKey;
+          sbModal.classList.add("open");
+        });
+        document.getElementById("closeSupabaseModalBtn").addEventListener("click", () => {
+          sbModal.classList.remove("open");
+        });
+        document.getElementById("supabaseConfigForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const urlVal = document.getElementById("inputSupabaseUrl").value.trim();
+          const keyVal = document.getElementById("inputSupabaseKey").value.trim();
+          const feedback = document.getElementById("supabaseFormFeedback");
+
+          if ((urlVal && !keyVal) || (!urlVal && keyVal)) {
+            feedback.style.display = "block";
+            feedback.style.color = "#f87171";
+            feedback.textContent = "Vui lòng nhập đầy đủ cả SUPABASE_URL và SUPABASE_ANON_KEY.";
+            return;
+          }
+
+          state.supabaseUrl = urlVal;
+          state.supabaseKey = keyVal;
+          localStorage.setItem("cinevault_supabase_url", urlVal);
+          localStorage.setItem("cinevault_supabase_anon_key", keyVal);
+
+          await fetchMovies();
+          sbModal.classList.remove("open");
+        });
+
+        document.getElementById("clearSupabaseBtn").addEventListener("click", async () => {
+          state.supabaseUrl = "";
+          state.supabaseKey = "";
+          localStorage.removeItem("cinevault_supabase_url");
+          localStorage.removeItem("cinevault_supabase_anon_key");
+          await fetchMovies();
+          sbModal.classList.remove("open");
+        });
+
+        // 11-File Code Viewer Modal
+        const codeModal = document.getElementById("codeViewerModal");
+        document.getElementById("navCodePackBtn").addEventListener("click", async () => {
+          codeModal.classList.add("open");
+          await loadProjectFilesModal();
+        });
+        document.getElementById("closeCodeModalBtn").addEventListener("click", () => {
+          codeModal.classList.remove("open");
+        });
+        document.getElementById("fileTabsContainer").addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-file-idx]");
+          if (!btn) return;
+          activeFileIndex = Number(btn.getAttribute("data-file-idx"));
+          document
+            .querySelectorAll("#fileTabsContainer .file-tab-btn")
+            .forEach((b, idx) => b.classList.toggle("active", idx === activeFileIndex));
+          renderSelectedCodeFile();
+        });
+        document.getElementById("copyCodeBtn").addEventListener("click", async () => {
+          const file = state.projectFiles[activeFileIndex];
+          if (!file) return;
+          await navigator.clipboard.writeText(file.content);
+          const btn = document.getElementById("copyCodeBtn");
+          btn.textContent = "✓ Đã sao chép";
+          setTimeout(() => {
+            btn.textContent = "Sao chép file";
+          }, 1500);
+        });
+        document.getElementById("downloadCodeBtn").addEventListener("click", () => {
+          const file = state.projectFiles[activeFileIndex];
+          if (!file) return;
+          const blob = new Blob([file.content], { type: "text/plain;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = file.path.split("/").pop();
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        });
+      });
+    </script>
+  </body>
+</html>
